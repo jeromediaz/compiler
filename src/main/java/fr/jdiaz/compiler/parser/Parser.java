@@ -23,12 +23,10 @@ import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
 
-import fr.jdiaz.Stopwatch;
 import fr.jdiaz.compiler.parser.reducers.TokenReducer;
 import fr.jdiaz.compiler.parser.tokenizer.TokenFilter;
 import fr.jdiaz.compiler.parser.tokenizer.Tokenizer;
 import fr.jdiaz.compiler.parser.tokenizer.TokenizerImpl;
-import fr.jdiaz.pinceau.fs.virtual.VfsHelper;
 
 public class Parser {
     
@@ -50,10 +48,6 @@ public class Parser {
     
     private static String readFileContent(final String fileName) throws IOException {
         // Récupération du fichier
-        
-        if (VfsHelper.isVfsPath(fileName)) {
-            return VfsHelper.getPathContentAsString(fileName);
-        }
         
         final File file = new File(fileName);
         
@@ -307,20 +301,13 @@ public class Parser {
     
     public ParseResult parseFile(File file) throws IOException {
         ParseResult pr = new ParseResult();
-        Stopwatch watch = Stopwatch.startStopwatch();
         this.init();
-        watch.addMeasure(ParseResult.MEASURE_INIT);
         
         List<Token> tokens = tokenize(file);
         pr.setInitialTokenCount(tokens.size());
-        watch.addMeasure(ParseResult.MEASURE_TOKENIZE);
         
         List<Token> reducedTokens = this.reduceTokenList(tokens);
         pr.setReducedTokens(reducedTokens);
-        watch.addMeasure(ParseResult.MEASURE_TOKENREDUCTION);
-        
-        pr.setElaspedTimes(watch.processTimeBetweenMeasures());
-        pr.setTotalTime(watch.getTotalTime());
         
         return pr;
     }

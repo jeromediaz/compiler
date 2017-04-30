@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.dom4j.Element;
-import org.springframework.util.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 
 import fr.jdiaz.compiler.parser.Parser;
 import fr.jdiaz.compiler.parser.Token;
