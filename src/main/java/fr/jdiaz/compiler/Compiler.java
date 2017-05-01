@@ -3,8 +3,6 @@ package fr.jdiaz.compiler;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +27,7 @@ public class Compiler {
     
     private Map<String, String> mTokenKindToWorkerClass;
     private Map<String, InstructionFactory> mTokenKindToWorkerFactoryInstance;
-    private Map<String, Class> mTokenKindToClass;
+    private Map<String, Class<? extends Instruction>> mTokenKindToClass;
     private String mDefaultWorkerClass = null;
     private InstructionFactory mDefaultWorkerFactory = null;
     
@@ -72,41 +70,7 @@ public class Compiler {
             List<Node> factoryNodes = document.selectNodes("//Factory");
             for (Node factoryNode : factoryNodes) {
                 Element factoryElement = (Element)factoryNode;
-                String kind = factoryElement.attributeValue("kind");
-                String className = factoryElement.attributeValue("class");
-                String fullClassName = String.format("%s.%sInstruction", packageName, className);
-                String factoryFullClassName = String.format("%sFactory", fullClassName);
-                
-                boolean factoryExists = false;
-                Class<?> instructionClass = null;
-                
-                try {
-                    instructionClass = Class.forName(fullClassName);
-                } catch (ClassNotFoundException e) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(e);
-                    }
-                }
-                
-                try {
-                    Class.forName(factoryFullClassName);
-                    factoryExists = true;
-                } catch (ClassNotFoundException e) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(e);
-                    }
-                }
-                
-                if (!StringUtils.isEmpty(kind)) {
-                    if (factoryExists) {
-                        mTokenKindToWorkerClass.put(kind, factoryFullClassName);
-                    } else if (instructionClass != null) {
-                        mTokenKindToClass.put(kind,  instructionClass);
-                    }
-                }
-                else {
-                    mDefaultWorkerClass = fullClassName;
-                }
+                initInstructionFactory(packageName, factoryElement);
             }
             
             String parserAttribute = builderElement.attributeValue("parser");
@@ -120,17 +84,60 @@ public class Compiler {
         isInitialized = true;
     }
     
+    public void initInstructionFactory(String packageName, Element factoryElement) {
+        String kind = factoryElement.attributeValue("kind");
+        String className = factoryElement.attributeValue("class");
+        String fullClassName = String.format("%s.%sInstruction", packageName, className);
+        String factoryFullClassName = String.format("%sFactory", fullClassName);
+        
+        boolean factoryExists = false;
+        Class<? extends Instruction> instructionClass = null;
+        
+        try {
+            Class<?> clazz = Class.forName(fullClassName);
+            if (Instruction.class.isAssignableFrom(clazz)) {
+                instructionClass = (Class<? extends Instruction>)clazz;
+            }
+        } catch (ClassNotFoundException e) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(e);
+            }
+        }
+        
+        try {
+            Class<?> clazz = Class.forName(factoryFullClassName);
+            if (InstructionFactory.class.isAssignableFrom(clazz)) {
+                factoryExists = true;
+            }
+        } catch (ClassNotFoundException e) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(e);
+            }
+        }
+        
+        if (!StringUtils.isEmpty(kind)) {
+            if (factoryExists) {
+                mTokenKindToWorkerClass.put(kind, factoryFullClassName);
+            } else if (instructionClass != null) {
+                mTokenKindToClass.put(kind,  instructionClass);
+            }
+        }
+        else {
+            mDefaultWorkerClass = fullClassName;
+        }
+    }
+    
     public Instruction getInstruction(Token token) {
         String tokenName = token.getName();
         
-        Class clazz = mTokenKindToClass.get(tokenName);
+        Class<? extends Instruction> clazz = mTokenKindToClass.get(tokenName);
         if (clazz == null) {
             return null;
         }
         
         Instruction instruction = null;
         try {
-            instruction = (Instruction) clazz.newInstance();
+            instruction = clazz.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
             LOGGER.error(e);
         }

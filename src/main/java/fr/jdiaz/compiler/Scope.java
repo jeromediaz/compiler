@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-
 import fr.jdiaz.compiler.branches.InstructionBranch;
 
 public class Scope implements Map<String, Object> {
