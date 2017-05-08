@@ -13,18 +13,23 @@ public class Runtime {
         ExecutionResult er = new ExecutionResult();
         
         int instructionCount = bc.instructionSize();
-        int instructionPosition = ctx.getCurrentLine();
         
-        Scope workContext = ctx;
+        ExecutionContext context = new ExecutionContext();
+        context.setScope(ctx);
+        
+        int instructionPosition = context.getCurrentLine();
+        
         do {
             Instruction worker = bc.getInstruction(instructionPosition);
-            int currentLine = workContext.getCurrentLine();
-            InstructionBranch branchBefore = bc.getInstructionBranch(currentLine);
-            InstructionBranch branchAfter = bc.getInstructionBranch(currentLine + 1);
-            workContext.setInstructionBranchBefore(branchBefore);
-            workContext.setInstructionBranchAfter(branchAfter);
-            workContext = worker.processInstruction(er, workContext);
-            instructionPosition = workContext.getCurrentLine();
+            
+            InstructionBranch branchBefore = bc.getInstructionBranch(instructionPosition);
+            InstructionBranch branchAfter = bc.getInstructionBranch(instructionPosition + 1);
+            
+            context.setInstructionBranchBefore(branchBefore);
+            context.setInstructionBranchAfter(branchAfter);
+            
+            worker.processInstruction(er, context);
+            instructionPosition = context.getCurrentLine();
             
         } while(instructionPosition < instructionCount);
         

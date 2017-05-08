@@ -2,57 +2,45 @@ package fr.jdiaz.compiler;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.script.Bindings;
+
 import fr.jdiaz.compiler.branches.InstructionBranch;
 
-public class Scope implements Map<String, Object> {
+public class Scope implements Bindings {
     
-    private int mCurrentLine = 0;
-    private int mPreviousLine = -1;
     private Map<String, Object> mContent;
     private Set<String> mConstants;
-    private Map<String, Scope> mScopeContaining;
     private Scope mParentScope;
     private Scope mGlobalScope;
     private boolean mIsIsolated = false;
     
-    private InstructionBranch mInstructionBranchBefore = null;
-    private InstructionBranch mInstructionBranchAfter = null;
-    
+
     public Scope() {
         this(null);
         this.mGlobalScope = this;
     }
     
-    protected Scope(Scope rootScope) {
-        this(rootScope, null, false);
+    protected Scope(Scope globalScope) {
+        this(globalScope, null, false);
     }
     
-    protected Scope(Scope rootScope, Scope parentScope, boolean isolated) {
+    protected Scope(Scope globalScope, Scope parentScope, boolean isolated) {
         mIsIsolated = isolated;
-        mGlobalScope = rootScope;
+        mGlobalScope = globalScope;
         mParentScope = parentScope;
         
         mContent = new HashMap<>();
-        mScopeContaining = new HashMap<>();
-        
-        if (parentScope != null) {
-            mCurrentLine = parentScope.getCurrentLine();
-            mPreviousLine = parentScope.getPreviousLine();
-            
-            mScopeContaining.putAll(parentScope.mScopeContaining);
-        }
+        mConstants = new HashSet<>();
         
     }
     
     
     public Scope newScope(boolean isolate) {
-        Scope newContext = new Scope(this.getRootScope(), this, isolate);
-        
-        newContext.setCurrentLine(this.getCurrentLine());
-        return newContext;
+        return new Scope(this.getGlobalScope(), this, isolate);
     }
     
     public Scope newScope() {
@@ -63,23 +51,6 @@ public class Scope implements Map<String, Object> {
         return mParentScope;
     }
     
-    public int getCurrentLine() {
-        return this.mCurrentLine;
-    }
-    
-    public void setCurrentLine(int pCurrentLine) {
-        mPreviousLine = mCurrentLine;
-        mCurrentLine = pCurrentLine;
-    }
-    
-    public int getPreviousLine() {
-        return mPreviousLine;
-    }
-    
-    public int incrementCurrentLine() {
-        mPreviousLine = mCurrentLine;
-        return ++mCurrentLine;
-    }
 
     @Override
     public int size() {
@@ -141,33 +112,58 @@ public class Scope implements Map<String, Object> {
         return mContent.entrySet();
     }
     
-    public Scope getRootScope() {
+    public Scope getGlobalScope() {
         return mGlobalScope;
     }
     
-    public void defineVar(String name, Object value) {
+    public Scope getScopeContainingVar(String name) {
+        if (this == mGlobalScope) {
+            // we are global scope
+            if (mContent.containsKey(name) || mConstants.contains(name)) {
+                return this;
+            }
+            return null;
+        }
         
+        if (mContent.containsKey(name) || mConstants.contains(name)) {
+            return this;
+        }
+        
+        if (!mIsIsolated && mParentScope != mGlobalScope && mParentScope != null) {
+            return mParentScope.getScopeContainingVar(name);
+        }
+        
+        return mGlobalScope.getScopeContainingVar(name);
+    }
+    
+    public Object getVar(String name) {
+        Scope containingScope = this.getScopeContainingVar(name);
+        if (containingScope != null) {
+            return containingScope.get(name);
+        }
+        
+        return null;
+    }
+    
+    public void setVar(String name, Object value) {
+        Scope containingScope = this.getScopeContainingVar(name);
+        
+        if (containingScope != null) {
+            containingScope.put(name, value);
+        } else {
+            mContent.put(name, value);
+        }
+    }
+    
+    public void defineVar(String name, Object value) {
+        if (!mConstants.contains(name) || !mContent.containsKey(name)) {
+            mContent.put(name, value);
+        }
     }
     
     public void defineConst(String name, Object value) {
-        
+        defineVar(name, value);
+        mContent.put(name, value);
     }
 
-    public InstructionBranch getInstructionBranchBefore() {
-        return mInstructionBranchBefore;
-    }
-
-    public void setInstructionBranchBefore(InstructionBranch mInstructionBranchBefore) {
-        this.mInstructionBranchBefore = mInstructionBranchBefore;
-    }
-
-    public InstructionBranch getInstructionBranchAfter() {
-        return mInstructionBranchAfter;
-    }
-
-    public void setInstructionBranchAfter(InstructionBranch mInstructionBranchAfter) {
-        this.mInstructionBranchAfter = mInstructionBranchAfter;
-    }
-    
-    
 }
