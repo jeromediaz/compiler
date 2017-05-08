@@ -6,7 +6,6 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -191,14 +190,8 @@ public class Compiler {
         init();
         
         Bytecode bytecode = new Bytecode();
-        AtomicInteger level = new AtomicInteger(0);
         
         int instructionLine = 0;
-        
-        ScopeRange workRange = new ScopeRange(instructionLine, level.get());
-        
-        ScopeRange workRangeInstruction = new ScopeRange(instructionLine, level.get());
-        int workRangeInstructionLevel = level.get();
         
         InstructionBranch workBranch = null;
         
@@ -221,28 +214,16 @@ public class Compiler {
                 }
             }
             
-            
-            
             if (worker == null) {
                 return null;
             }
             
             bytecode.addInstructionBranch(workBranch);
             
-            if (level.get() != workRangeInstructionLevel) {
-                workRangeInstruction.setEndOfScope(instructionLine - 1);
-                workRangeInstruction = new ScopeRange(instructionLine, level.get());
-                workRangeInstructionLevel = level.get();
-            }
-            
-            
             bytecode.addInstruction(worker);
             
             instructionLine++;
         }
-        workRangeInstruction.setEndOfScope(instructionLine - 1);
-        
-        workRange.setEndOfScope(instructionLine);
         
         return bytecode;
     }
