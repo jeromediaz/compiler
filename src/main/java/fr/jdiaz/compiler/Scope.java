@@ -8,8 +8,6 @@ import java.util.Set;
 
 import javax.script.Bindings;
 
-import fr.jdiaz.compiler.branches.InstructionBranch;
-
 public class Scope implements Bindings {
     
     private Map<String, Object> mContent;

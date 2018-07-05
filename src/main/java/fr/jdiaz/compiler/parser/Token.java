@@ -5,14 +5,14 @@ public class Token {
     private final long mIndex;
     private final long mLength;
     private final String mTokenContent;
-    private final String mFilterName;
+    private final String mName;
     
     
-    public Token(String token, long index, long length, String filterName) {
+    public Token(String token, long index, long length, String name) {
         mTokenContent = token;
         mIndex = index;
         mLength = length;
-        mFilterName = filterName;
+        mName = name;
     }
     
     public Token(String token, long index, long length) {
@@ -31,12 +31,9 @@ public class Token {
         return mTokenContent;
     }
     
-    public String getFilterName() {
-        return mFilterName;
-    }
     
     public String getName() {
-        return mFilterName;
+        return mName;
     }
     
 }

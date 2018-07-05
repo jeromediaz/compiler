@@ -2,7 +2,7 @@ package fr.jdiaz.compiler.branches;
 
 public enum BlockKind {
     
-    BlockKindLoop,
-    BlockKindCondition
+    BLOCK_KIND_LOOP,
+    BLOCK_KIND_CONDITION
     
 }

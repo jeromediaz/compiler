@@ -186,6 +186,14 @@ public class Compiler {
         return generateBytecode(pr);
     }
     
+    public Bytecode generateBytecode(String string) {
+        this.init();
+        
+        ParseResult pr = mParser.parseString(string);
+        
+        return generateBytecode(pr);
+    }
+    
     private Bytecode generateBytecode(ParseResult pr) {
         init();
         

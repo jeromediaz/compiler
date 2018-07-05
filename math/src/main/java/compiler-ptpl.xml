@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Builder package="fr.jdiaz.compiler.ptpl.instructions" parser="classpath://parser.xml">
+  <Factory class="Begin" kind="startOfLoop"/>
+  <Factory class="End" kind="endOfLoop"/>
+  <Factory class="DisplayedKeypath" kind="displayedKeyPath"/>
+  <Factory class="Include" kind="include"/>
+  <Factory class="Default" kind="other"/>
+  <Factory class="If" kind="if"/>
+  <Factory class="Else" kind="else"/>
+  <Factory class="Endif" kind="endif"/>
+  <Factory class="Group" kind="startOfGroup"/>
+  <Factory class="EndGroup" kind="endOfGroup"/>
+  <Factory class="GroupCount" kind="groupCountKeyPath"/>
+  <Factory class="GroupComputation" kind="groupComputation"/>
+  <Factory class="DotImg" kind="dotImg"/>
+  <Factory class="EndDotImg" kind="endDotImg"/>
+</Builder>

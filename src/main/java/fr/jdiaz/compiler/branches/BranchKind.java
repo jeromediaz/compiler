@@ -2,7 +2,7 @@ package fr.jdiaz.compiler.branches;
 
 public enum BranchKind {
     
-    BranchKindLoop,
-    BranchKindCondition
+    BRANCH_KIND_LOOP,
+    BRANCH_KIND_CONDITION
 
 }

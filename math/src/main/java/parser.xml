@@ -1,0 +1,70 @@
+<Parser>
+  <Tokenizer class="fr.jdiaz.compiler.parser.tokenizer.TokenizerImpl">
+    <Token name="whitespaces">^[ \t]{1,}</Token>
+    <Token name="operators">^[\-\+%/*\^]</Token>
+    <Token name="openParenthesis">^[(]</Token>
+    <Token name="closeParenthesis">^[)]</Token>
+    <Token name="letters">^[a-zA-Z_]{1,}</Token>
+    <Token name="dot">^\.</Token>
+    <Token name="comma">^,</Token>
+    <Token name="digits">^[0-9]{1,}</Token>
+  </Tokenizer>
+  <Reducers>
+    <Reducer name="function" level="1">
+      <And>
+        <TokenFilter kind="letters"/>
+        <Repetition min="0" max="-1">
+          <Or>
+            <TokenFilter kind="digits"/>
+            <TokenFilter kind="letters"/>
+          </Or>
+        </Repetition>
+      </And>
+    </Reducer>
+    <Reducer name="floatingNumber" level="2">
+      <Opt>
+        <TokenFilter kind="operators">^\-$</TokenFilter>
+      </Opt>
+      <Or>
+        <And>
+          <TokenFilter kind="digits"/>
+          <Opt>
+            <And>
+              <TokenFilter kind="dot"/>
+              <TokenFilter kind="digits"/>
+            </And>
+          </Opt>
+        </And>
+        <And>
+          <TokenFilter kind="dot"/>
+          <TokenFilter kind="digits"/>
+        </And>
+      </Or>
+    </Reducer>
+    <Reducer name="exponantNumber" level="3">
+      <And>
+        <TokenListFilter ref="floatingNumber"/>
+        <TokenFilter kind="letters">^[eE]$</TokenFilter>
+        <Opt>
+          <TokenFilter kind="operators">^\-$</TokenFilter>
+        </Opt>
+        <TokenFilter kind="digits"/> 
+      </And>
+    </Reducer>
+    
+    <Reducer name="reversedPolishNotation" level="10">
+      <ShuntingYard package="fr.jdiaz.compiler.math">
+        <Or>
+          <TokenListFilter ref="function"/>
+          <TokenListFilter ref="floatingNumber"/>
+          <TokenListFilter ref="exponantNumber"/>
+          <TokenFilter kind="operators"/>
+          <TokenFilter kind="openParenthesis"/>
+          <TokenFilter kind="closeParenthesis"/>
+          <TokenFilter kind="comma"/>
+        </Or>
+      </ShuntingYard>
+    </Reducer>
+    
+  </Reducers>
+</Parser>

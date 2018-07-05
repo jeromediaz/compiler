@@ -140,11 +140,7 @@ public class Parser {
             
             String level = reducerElement.attributeValue("level", "0");
             Integer levelInt = Integer.valueOf(level);
-            List<TokenReducer> tokenReducerList= levelToTokenList.get(levelInt);
-            if (tokenReducerList == null) {
-                tokenReducerList = new ArrayList<>();
-                levelToTokenList.put(levelInt, tokenReducerList);
-            }
+            List<TokenReducer> tokenReducerList= levelToTokenList.computeIfAbsent(levelInt, key -> new ArrayList<>());
             
             @SuppressWarnings("rawtypes")
             List subNodes = reducerElement.elements();
@@ -223,7 +219,10 @@ public class Parser {
     
     public TokenReducer createTokenReducer(Element element) {
         String reducerName = element.getName();
-        String tokenClassName = String.format("fr.jdiaz.compiler.parser.reducers.%sReducer", reducerName);
+        
+        String reducerPackage = element.attributeValue("package", "fr.jdiaz.compiler.parser.reducers");
+        
+        String tokenClassName = String.format("%s.%sReducer", reducerPackage, reducerName);
         
         TokenReducer tokenReducer = null;
         
@@ -244,8 +243,8 @@ public class Parser {
     }
     
     public List<Token> reduceTokenList(List<Token> tokens) {
-        List<Token> result = new ArrayList<Token>();
-        List<Token> workTokens = new ArrayList<Token>(tokens);
+        List<Token> result = new ArrayList<>();
+        List<Token> workTokens = new ArrayList<>(tokens);
         
         for(Map.Entry<Integer, List<TokenReducer>>levelToList : levelToTokenList.entrySet()) {
             
@@ -304,6 +303,19 @@ public class Parser {
         this.init();
         
         List<Token> tokens = tokenize(file);
+        pr.setInitialTokenCount(tokens.size());
+        
+        List<Token> reducedTokens = this.reduceTokenList(tokens);
+        pr.setReducedTokens(reducedTokens);
+        
+        return pr;
+    }
+
+    public ParseResult parseString(String string) throws IOException {
+        ParseResult pr = new ParseResult();
+        this.init();
+        
+        List<Token> tokens = tokenize(string);
         pr.setInitialTokenCount(tokens.size());
         
         List<Token> reducedTokens = this.reduceTokenList(tokens);
