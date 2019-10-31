@@ -186,7 +186,7 @@ public class Compiler {
         return generateBytecode(pr);
     }
     
-    public Bytecode generateBytecode(String string) {
+    public Bytecode generateBytecode(String string) throws IOException {
         this.init();
         
         ParseResult pr = mParser.parseString(string);
